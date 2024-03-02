@@ -5,9 +5,9 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     [SerializeField] int maxHealth = 5;
-    int currentHealthPoints = 0;
+    [SerializeField] int currentHealthPoints = 0;
 
-    void Start()
+    void OnEnable()
     {
         currentHealthPoints = maxHealth;
     }
@@ -23,7 +23,7 @@ public class EnemyHealth : MonoBehaviour
         currentHealthPoints--;
         if (currentHealthPoints < 1)
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
         }
     }
 }
