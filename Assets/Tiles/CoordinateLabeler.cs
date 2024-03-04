@@ -9,17 +9,20 @@ using System;
 [RequireComponent(typeof(TextMeshPro))]
 public class CoordinateLabeler : MonoBehaviour
 {
+    // 적들나오는 곳의 라벨을 0,0으로 설정하지 않아서 오류가 나오는듯 아예 이상한곳에 라벨이 칠해짐
     [SerializeField] Color defaultColor = Color.white;
     [SerializeField] Color changeColor = Color.black;
+    [SerializeField] Color exploredColor = Color.yellow;
+    [SerializeField] Color pathColor = new Color(1f, 0.5f, 0f);
 
     TextMeshPro label;
-    WayPoint wayPoint;
     Vector2Int coordinates = new Vector2Int();
+    GriadManager griadManager;
 
     void Awake()
     {
+        griadManager = FindObjectOfType<GriadManager>();
         label = GetComponent<TextMeshPro>();
-        wayPoint = GetComponentInParent<WayPoint>();
         DisplayCoordinate();
         // label.color = defaultColor;
         label.enabled = false;
@@ -56,14 +59,28 @@ public class CoordinateLabeler : MonoBehaviour
         // {
         //     label.color = changeColor;
         // }
-        if(wayPoint.IsPlaceable)
-        {
-            label.color = defaultColor;
-        }
-        else
+        if(griadManager == null) { return; }
+
+        Node node = griadManager.GetNode(coordinates);
+        if(node == null) { return; }
+
+        if(!node.isWalkable)
         {
             label.color = changeColor;
         }
+        else if(node.isPath)
+        {
+            label.color = pathColor;
+        }
+        else if(node.isExplored)
+        {
+            label.color = exploredColor;
+        }
+        else
+        {
+            label.color = defaultColor;
+        }
+
     }
 
     void ToggleLabels()
