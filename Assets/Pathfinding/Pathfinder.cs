@@ -1,30 +1,54 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
 {
-    [SerializeField] Node currentSearchNode;
+    [SerializeField] Vector2Int startCoordinates;
+    public Vector2Int StartCoordinates { get { return startCoordinates; } }
+
+    [SerializeField] Vector2Int destinationCoordinates;
+    public Vector2Int DestinationCoordinates { get { return destinationCoordinates; } }
+
+    Node startNode;
+    Node destinationNode;
+    Node currentSearchNode;
+
+    Queue<Node> frontier = new Queue<Node>();
+    Dictionary<Vector2Int, Node> reached = new Dictionary<Vector2Int, Node>();
+
     Vector2Int[] directions = { Vector2Int.right, Vector2Int.left, Vector2Int.up, Vector2Int.down};
     GriadManager griadManager;
-    Dictionary<Vector2Int, Node> grid;
+    Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
 
     void Awake()
     {
         griadManager = FindObjectOfType<GriadManager>();
+
         if(griadManager != null)
         {
             grid = griadManager.Grid;
+            startNode = grid[startCoordinates];
+            destinationNode = grid[destinationCoordinates];
+
         }
     }
 
     void Start()
     {
-        ExplorNeighbors();
+        
+        GetNewPath();
     }
 
-    void ExplorNeighbors()
+    public List<Node> GetNewPath()
+    {
+        BreadFirstSearch();
+        return BuildPath();
+    }
+
+    void ExploreNeighbors()
     {
         List<Node> neighbors = new List<Node>();
 
@@ -35,9 +59,82 @@ public class Pathfinder : MonoBehaviour
             if(grid.ContainsKey(neighborCoords))
             {
                 neighbors.Add(grid[neighborCoords]);
+            }
+        }
 
-                grid[neighborCoords].isExplored = true;
+        foreach(Node neighbor in neighbors)
+        {
+            if(!reached.ContainsKey(neighbor.coordinates) && neighbor.isWalkable)
+            {
+                neighbor.coonectTo = currentSearchNode;
+                reached.Add(neighbor.coordinates, neighbor);
+                frontier.Enqueue(neighbor);
             }
         }
     }
+
+    void BreadFirstSearch()
+    {
+            startNode.isWalkable = true;
+        destinationNode.isWalkable = true;
+        frontier.Clear();
+        reached.Clear();
+
+        bool isRunning = true;
+
+        frontier.Enqueue(startNode);
+        reached.Add(startCoordinates, startNode);
+
+        while(frontier.Count > 0 && isRunning)
+        {
+            currentSearchNode = frontier.Dequeue();
+            currentSearchNode.isExplored = true;
+            ExploreNeighbors();
+            if(currentSearchNode.coordinates == destinationCoordinates)
+            {
+                isRunning = false;
+            }
+        }
+    }
+
+    List<Node> BuildPath()
+    {
+        List<Node> path = new List<Node>();
+        Node currentNode = destinationNode;
+
+        path.Add(currentNode);
+        currentNode.isPath = true;
+
+        while(currentNode.coonectTo != null)
+        {
+            currentNode = currentNode.coonectTo;
+            path.Add(currentNode);
+            currentNode.isPath = true;
+        }
+
+        path.Reverse();
+
+        return path;
+    }
+
+    public bool WillBlockPath(Vector2Int coordinates)
+    {
+        if(grid.ContainsKey(coordinates))
+        {
+            bool previousState = grid[coordinates].isWalkable;
+
+            grid[coordinates].isWalkable = false;
+            List<Node> newPath = GetNewPath();
+            grid[coordinates].isWalkable = true;
+
+            if(newPath.Count <= 1)
+            {
+                GetNewPath();
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
+   

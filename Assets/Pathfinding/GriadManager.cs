@@ -13,6 +13,10 @@ public class GriadManager : MonoBehaviour
     // Key에서 Value를 찾는것은 빠르지만
     // Value에서 Key를 찾는것은 매우 느리다.
     [SerializeField] Vector2Int gridSize;
+    [Tooltip("World Grid Size - Should match UnityEditor snap settings")]
+    [SerializeField] int unityGridSize = 10;
+    public int UnityGridSize { get { return unityGridSize; } }
+
     Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
     public Dictionary<Vector2Int, Node> Grid {get { return grid; }}
 
@@ -30,7 +34,43 @@ public class GriadManager : MonoBehaviour
 
         return null;
     }
+
+    public void BlockNode(Vector2Int coordinates)
+    {
+        if(grid.ContainsKey(coordinates))
+        {
+            grid[coordinates].isWalkable = false;
+        }
+    }
+
+    public void RestNodes()
+    {
+        foreach(KeyValuePair<Vector2Int, Node> entry in grid)
+        {
+            entry.Value.coonectTo = null;
+            entry.Value.isExplored = false;
+            entry.Value.isPath = false;
+        }
+    }
     
+    public Vector2Int GetCoordinatesFromPosition(Vector3 position)
+    {
+        Vector2Int coordinates = new Vector2Int();
+        coordinates.x = Mathf.RoundToInt(position.x / unityGridSize);
+        coordinates.y = Mathf.RoundToInt(position.z / unityGridSize);
+
+        return coordinates;
+    }
+
+    public Vector3 GetPositionFromCoordinates(Vector2Int coordinates)
+    {
+        Vector3 position = new Vector3();
+        position.x = coordinates.x * unityGridSize;
+        position.z = coordinates.y * unityGridSize;
+
+        return position;
+    }
+
     void CreateGrid()
     {
         for(int x = 0; x < gridSize.x; x++)
