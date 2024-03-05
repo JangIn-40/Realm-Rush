@@ -38,10 +38,13 @@ public class Tile : MonoBehaviour
     {
         if(griadManager.GetNode(coordinates).isWalkable && !pathfinder.WillBlockPath(coordinates))
         {
-            bool isPlaced = towerPrefab.CreatTower(towerPrefab, transform.position);
+            bool isSucessful = towerPrefab.CreatTower(towerPrefab, transform.position);
             // Instantiate(towerPrefab, transform.position, Quaternion.identity);
-            isPlaceable = !isPlaced;
-            griadManager.BlockNode(coordinates);
+            if(isSucessful)
+            {
+                griadManager.BlockNode(coordinates);
+                pathfinder.NotifyReceivers();
+            }
         }
     }
 
