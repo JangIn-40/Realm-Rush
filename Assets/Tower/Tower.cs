@@ -1,10 +1,44 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Tower : MonoBehaviour
 {
     [SerializeField] int cost = 75;
+    [SerializeField] float buildDelay = 0.5f;
+
+    void Start()
+    {
+        StartCoroutine(Build());
+    }
+
+    IEnumerator Build()
+    {
+        foreach(Transform child in transform)
+        {
+            child.gameObject.SetActive(false);
+            foreach(Transform granchild in child)
+            {
+                granchild.gameObject.SetActive(false);
+            }
+        }
+
+        foreach(Transform child in transform)
+        {
+            child.gameObject.SetActive(true);
+            yield return new WaitForSeconds(buildDelay);
+            
+            foreach(Transform granchild in child)
+            {
+                granchild.gameObject.SetActive(true);
+            }
+
+        }
+
+        
+    }
 
     public bool CreatTower(Tower tower, Vector3 position)
     {
@@ -14,12 +48,14 @@ public class Tower : MonoBehaviour
         {
             return false;
         }
+        
         if(bank.CurrentCoin >= cost)
         {
+            Instantiate(tower, position, Quaternion.identity);
             bank.WithDraw(cost);
-            Instantiate(tower.gameObject, position, Quaternion.identity);
             return true;
         }
+
         return false;
     }
 }
